@@ -3,3 +3,10 @@
 
 #include "RectViewExtensionSubsystem.h"
 
+void URectViewExtensionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+
+	UE_LOG(LogTemp, Warning, TEXT("FRectViewExtension Initialize"))
+	this->RectViewExtension = FSceneViewExtensions::NewExtension<FRectViewExtension>();
+}
