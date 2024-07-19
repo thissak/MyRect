@@ -41,20 +41,20 @@ public:
 class FRectShaderVertexBuffer : public FVertexBuffer
 {
 public:
-	virtual void InitRHI(FRHICommandListBase& RHICmdList) override
+	virtual void InitRHI(FRHICommandListBase& RHICmdList) 
 	{
 		TResourceArray<FColorVertex, VERTEXBUFFER_ALIGNMENT> Vertices;
 		Vertices.SetNumUninitialized(4);
 
-		Vertices[0].Position = FVector2f(-1.0f, 1.0f);
-		Vertices[1].Position = FVector2f(-1.0f, -1.0f);
-		Vertices[2].Position = FVector2f(1.0f, -1.0f);
-		Vertices[3].Position = FVector2f(1.0f, 1.0f);
+		Vertices[0].Position = FVector2f(-1.0f, -1.0f); // left bottom
+		Vertices[1].Position = FVector2f(1.0f, -1.0f); //right bottom
+		Vertices[2].Position = FVector2f(-1.0f, 1.0f); // left top
+		Vertices[3].Position = FVector2f(1.0f, 1.0f); // right top
 
 		Vertices[0].Color = FVector4f(1.0f, 0.0f, 0.0f, 1.0f);
 		Vertices[1].Color = FVector4f(0.0f, 1.0f, 0.0f, 1.0f);
-		Vertices[2].Color = FVector4f(0.0f, 0.0f, 1.0f, 1.0f);
-		Vertices[3].Color = FVector4f(1.0f, 0.0f, 0.0f, 1.0f);
+		Vertices[2].Color = FVector4f(0.0f, 0.0f, 1.0f, 1.0f); //blue2
+		Vertices[3].Color = FVector4f(1.0f, 0.0f, 1.0f, 1.0f);
 
 		FRHIResourceCreateInfo CreateInfo(TEXT("FScreenRectangleVertexBuffer"), &Vertices);
 		VertexBufferRHI = RHICmdList.CreateVertexBuffer(Vertices.GetResourceDataSize(), BUF_Static, CreateInfo);
@@ -65,9 +65,9 @@ public:
 class FRectShaderIndexBuffer : public FIndexBuffer
 {
 public:
-	virtual void InitRHI(FRHICommandListBase& RHICmdList) override
+	virtual void InitRHI(FRHICommandListBase& RHICmdList) 
 	{
-		const uint16 Indices[] = { 0, 1, 2, 2 ,3, 0};
+		const uint16 Indices[] = { 2, 0, 1, 2, 3, 1 };
 
 		TResourceArray<uint16, INDEXBUFFER_ALIGNMENT> IndexBuffer;
 		uint32 NumIndices = UE_ARRAY_COUNT(Indices);
@@ -80,14 +80,14 @@ public:
 };
 
 // VertexDeclaration
-class FRectShaderVertexDelaration : public FRenderResource
+class FRectShaderVertexDeclaration : public FRenderResource
 {
 public:
 	FVertexDeclarationRHIRef VertexDeclarationRHI;
 
-	virtual ~FRectShaderVertexDelaration() {}
+	virtual ~FRectShaderVertexDeclaration() override {}
 
-	virtual void InitRHI(FRHICommandListBase& RHICmdList) override
+	virtual void InitRHI(FRHICommandListBase& RHICmdList) 
 	{
 		FVertexDeclarationElementList Elements;
 		uint16 Stride = sizeof(FColorVertex);
@@ -102,9 +102,9 @@ public:
 	}
 };
 
-extern SUPERRECTANGLE_API TGlobalResource<FRectShaderVertexBuffer> GRectShaderVSBuffer;
+extern SUPERRECTANGLE_API TGlobalResource<FRectShaderVertexBuffer> GRectShaderVertexBuffer;
 extern SUPERRECTANGLE_API TGlobalResource<FRectShaderIndexBuffer> GRectShaderIndexBuffer;
-extern SUPERRECTANGLE_API TGlobalResource<FRectShaderVertexDelaration> GRectShaderVertexDelaration;
+extern SUPERRECTANGLE_API TGlobalResource<FRectShaderVertexDeclaration> GRectShaderVertexDeclaration;
 
 
 

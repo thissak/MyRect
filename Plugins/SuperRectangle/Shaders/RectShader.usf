@@ -9,7 +9,7 @@ void RectVSMain(
 	out float4 OutColor : COLOR0
 )
 {
-	OutPostion = float4(InPostion, 0.0, 1.0);
+	OutPostion = float4(InPostion*0.5, 0, 1);
 	OutColor = InColor;
 }
 
@@ -18,5 +18,5 @@ void RectPSMain(
 	in float4 InColor : COLOR0,
 	out float4 OutColor : SV_TARGET0)
 {
-	OutColor = InColor;
+	OutColor = InColor*1.5;
 }
