@@ -10,7 +10,7 @@ void FSuperRectangleModule::StartupModule()
 {
 	FString BaseDir = IPluginManager::Get().FindPlugin(TEXT("SuperRectangle"))->GetBaseDir();
 	FString PluginShaderDir = FPaths::Combine(BaseDir + TEXT("/Shaders"));
-	AddShaderSourceDirectoryMapping(TEXT("/SuperShader"), PluginShaderDir);
+	AddShaderSourceDirectoryMapping(TEXT("/MySuperShaders"), PluginShaderDir);
 }
 
 void FSuperRectangleModule::ShutdownModule()

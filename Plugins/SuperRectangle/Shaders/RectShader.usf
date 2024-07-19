@@ -1,0 +1,22 @@
+﻿#include "/Engine/Public/Platform.ush"
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+
+void RectVSMain(
+	in float2 InPostion : ATTRIBUTE0,
+	in float4 InColor : ATTRIBUTE1,
+	out float4 OutPostion : SV_POSITION,
+	out float4 OutColor : COLOR0
+)
+{
+	OutPostion = float4(InPostion, 0.0, 1.0);
+	OutColor = InColor;
+}
+
+void RectPSMain(
+	in float4 InPosition : SV_POSITION,
+	in float4 InColor : COLOR0,
+	out float4 OutColor : SV_TARGET0)
+{
+	OutColor = InColor;
+}
