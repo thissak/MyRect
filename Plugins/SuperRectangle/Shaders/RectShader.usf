@@ -21,6 +21,10 @@ void RectPSMain(
 	in float4 InColor : COLOR0,
 	out float4 OutColor : SV_TARGET0)
 {
-	OutColor = Color;
-	// OutColor = InColor*1.5;
+	if (Color.b > 0){
+		OutColor = Color;
+	}
+	else{
+		OutColor = InColor*1.5;
+	}
 }

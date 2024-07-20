@@ -17,9 +17,15 @@ public:
 	virtual void BeginRenderViewFamily(FSceneViewFamily& InViewFamily) override {};
 	virtual void PreRenderViewFamily_RenderThread(FRDGBuilder& GraphBuilder, FSceneViewFamily& InViewFamily) override {};
 	virtual void PreRenderView_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& InView) override {};
-	virtual void PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& InView,
-		const FRenderTargetBindingSlots& RenderTargets, TRDGUniformBufferRef<FSceneTextureUniformParameters> SceneTextures) override {};
-	virtual void PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View, const FPostProcessingInputs& Inputs) override;
+	virtual void PostRenderBasePassDeferred_RenderThread(
+		FRDGBuilder& GraphBuilder,
+		FSceneView& View,
+		const FRenderTargetBindingSlots& RenderTargets,
+		TRDGUniformBufferRef<FSceneTextureUniformParameters> SceneTextures) override;
+	virtual void PrePostProcessPass_RenderThread(
+		FRDGBuilder& GraphBuilder,
+		const FSceneView& View,
+		const FPostProcessingInputs& Inputs) override;
 
 	virtual void SubscribeToPostProcessingPass(EPostProcessingPass Pass, FAfterPassCallbackDelegateArray& InOutPassCallbacks, bool bIsPassEnabled) override;
 
@@ -49,29 +55,29 @@ protected:
 		FRHIDepthStencilState* DepthStencilState = nullptr,
 		uint32 StencilRef = 0);
 
-	static inline void DrawFullscreenRectangle(FRHICommandList& RHICmdList, uint32 InstanceCount)
-	{
-		RHICmdList.SetStreamSource(0, GRectShaderVertexBuffer.VertexBufferRHI, 0);
-		RHICmdList.DrawIndexedPrimitive(
-			GRectShaderIndexBuffer.IndexBufferRHI,
-			0,
-			0,
-			4,
-			0,
-			2,
-			InstanceCount);
-	}
+	static void DrawFullscreenRectangle(FRHICommandList& RHICmdList, uint32 InstanceCount);
 	
-	FScreenPassTexture SuperRectanglePass_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& view,
-		const FPostProcessMaterialInputs& Inputs);
+	FScreenPassTexture SuperRectanglePassAfterTonemap_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View,
+		const FPostProcessMaterialInputs& Inputs);	
+
+	FScreenPassTexture SuperRectanglePassAfterMotionBlur_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View,
+		const FPostProcessMaterialInputs& InOutInputs);
 
 public:
 	static void RenderRectangle(
 	FRDGBuilder& GraphBuilder,
 	const FGlobalShaderMap* ViewShaderMap,
 	const FIntRect& View,
-	const FScreenPassTexture& SceneColor);
+	const FScreenPassTexture& SceneColor,
+	const FLinearColor MyColor
+	);
 
-	
+private:
+	EPixelFormat FinalColorPixelFormat;
+	EPixelFormat HDRPixelFormat;
+	float FinalColorGamma;
+
+public:
+	FScreenPassTexture ReturnUntouchedSceneColorForPostProcessing(const FPostProcessMaterialInputs& InOutInputs);
 };
 
