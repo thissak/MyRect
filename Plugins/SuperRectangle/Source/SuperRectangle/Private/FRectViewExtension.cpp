@@ -4,14 +4,29 @@
 #include "RectangleShader.h"
 #include "RenderGraphUtils.h"
 #include "SceneRendering.h"
+#include "PostProcess/PostProcessing.h"
 #include "PostProcess/PostProcessMaterialInputs.h"
 
 DECLARE_GPU_DRAWCALL_STAT(SuperRectanglePass);
 
 FRectViewExtension::FRectViewExtension(const FAutoRegister& AutoRegister) : FSceneViewExtensionBase(AutoRegister){}
 
+void FRectViewExtension::PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View,
+	const FPostProcessingInputs& Inputs)
+{
+	checkSlow(View.bIsViewInfo); // can't do dynamic_cast because FViewInfo doesn't have any virtual functions.
+	
+	const FIntRect Viewport = static_cast<const FViewInfo&>(View).ViewRect;
+	FScreenPassTexture SceneColor((*Inputs.SceneTextures)->SceneColorTexture, Viewport);
+
+	RDG_EVENT_SCOPE(GraphBuilder, "__PrePostProcessPass_RenderThread__");
+	const FGlobalShaderMap* ViewShaderMap = static_cast<const FViewInfo&>(View).ShaderMap;
+
+	RenderRectangle(GraphBuilder, ViewShaderMap, Viewport, SceneColor);
+}
+
 void FRectViewExtension::SubscribeToPostProcessingPass(EPostProcessingPass Pass,
-	FAfterPassCallbackDelegateArray& InOutPassCallbacks, bool bIsPassEnabled)
+                                                       FAfterPassCallbackDelegateArray& InOutPassCallbacks, bool bIsPassEnabled)
 {
 	if (Pass == EPostProcessingPass::Tonemap)
 	{
@@ -45,6 +60,7 @@ void FRectViewExtension::RenderRectangle(
 {
 	FRectShaderPSParams* PSParams = GraphBuilder.AllocParameters<FRectShaderPSParams>();
 	PSParams->RenderTargets[0] = FRenderTargetBinding(SceneColor.Texture, ERenderTargetLoadAction::ENoAction);
+	PSParams->Color = FLinearColor(1.0f, 0.0f, 0.0f);
 
 	TShaderMapRef<FRectShaderPS> PixelShader(ViewShaderMap);
 

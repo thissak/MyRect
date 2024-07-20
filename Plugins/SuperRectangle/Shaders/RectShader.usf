@@ -2,6 +2,8 @@
 #include "/Engine/Private/Common.ush"
 #include "/Engine/Private/ScreenPass.ush"
 
+float4 Color;
+
 void RectVSMain(
 	in float2 InPostion : ATTRIBUTE0,
 	in float4 InColor : ATTRIBUTE1,
@@ -13,10 +15,12 @@ void RectVSMain(
 	OutColor = InColor;
 }
 
+
 void RectPSMain(
 	in float4 InPosition : SV_POSITION,
 	in float4 InColor : COLOR0,
 	out float4 OutColor : SV_TARGET0)
 {
-	OutColor = InColor*1.5;
+	OutColor = Color;
+	// OutColor = InColor*1.5;
 }

@@ -20,6 +20,7 @@ public:
 
 // pixel shader class
 BEGIN_SHADER_PARAMETER_STRUCT(FRectShaderPSParams, )
+	SHADER_PARAMETER(FLinearColor, Color)
 	RENDER_TARGET_BINDING_SLOTS()
 END_SHADER_PARAMETER_STRUCT()
 class FRectShaderPS : public FGlobalShader
