@@ -4,6 +4,7 @@
 
 SCREEN_PASS_TEXTURE_VIEWPORT(ViewParams)
 
+float ParticleAlpha;
 float4 Color;
 Texture2D ParticleTexture;
 SamplerState InputSampler;
@@ -35,22 +36,15 @@ void RectVSMain(
 void RectPSMain(
 	in float4 InPosition : SV_POSITION,
 	in float4 InColor : COLOR0,
-	out float4 OutColor : SV_TARGET0,
-	out float4 OutParticleColor : SV_TARGET1
+	out float4 OutParticleColor : SV_TARGET0
 	)
 {
 
 	//ParticleTexture = ParticleTexture;
 	// if (Color.b > 0){
-	float ParitlceMult = 1.0;
 	float2 UV = PosToUV(InPosition.xy);
-	float4 samp = Texture2DSample(ParticleTexture, InputSampler, UV);
-	//samp *= 0;
-	//OutColor = InColor;//float4(samp.r * 100.0, 0.0, 0.0, 1.0);
-	OutColor = OutColor;
-	OutParticleColor = float4(samp.r * ParitlceMult, samp.g * ParitlceMult, samp.b * ParitlceMult, 1.0);
-	// }
-	// else{
-	// 	OutColor = InColor*1.5;
-	// }
+	float4 OriginalParticleSample = Texture2DSample(ParticleTexture, InputSampler, UV);
+
+	OutParticleColor = float4(OriginalParticleSample.rgb * ParticleAlpha, 1.0);
+
 }

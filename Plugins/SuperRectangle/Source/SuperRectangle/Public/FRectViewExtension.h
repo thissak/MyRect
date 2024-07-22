@@ -70,7 +70,6 @@ public:
 	static void RenderRectangle(
 	FRDGBuilder& GraphBuilder,
 	const FGlobalShaderMap* ViewShaderMap,
-	const FPostProcessingInputs& Inputs,
 	const FIntRect& View,
 	const FScreenPassTexture& SceneColor,
 	const FLinearColor MyColor,

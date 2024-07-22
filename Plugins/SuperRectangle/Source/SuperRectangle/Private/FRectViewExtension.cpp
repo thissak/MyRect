@@ -26,7 +26,7 @@ void FRectViewExtension::PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuild
 	const FRDGTextureMSAA ParticleTextureMASS = TranslucencyAfterDofTexture.ColorTexture;
 	
 	FLinearColor MyColor = FLinearColor(1.0f, 0.0f, 1.0f);
-	RenderRectangle(GraphBuilder, ViewShaderMap, Inputs, Viewport, SceneColor, MyColor, ParticleTextureMASS);
+	RenderRectangle(GraphBuilder, ViewShaderMap, Viewport, SceneColor, MyColor, ParticleTextureMASS);
 }
 
 
@@ -35,7 +35,6 @@ void FRectViewExtension::PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuild
 void FRectViewExtension::RenderRectangle(
 	FRDGBuilder& GraphBuilder,
 	const FGlobalShaderMap* ViewShaderMap,
-	const FPostProcessingInputs& Inputs,
 	const FIntRect& ViewInfo,
 	const FScreenPassTexture& SceneColor,
 	const FLinearColor MyColor,
@@ -47,21 +46,21 @@ void FRectViewExtension::RenderRectangle(
 	const FScreenPassTextureViewportParameters SceneTextureViewportParams = GetTextureViewportParameters(SceneColorTextureViewport);
 
 	// thissa
-	FRDGTextureRef OriginalParticleTexture = Inputs.TranslucencyViewResourcesMap.Get(ETranslucencyPass::TPT_TranslucencyAfterDOF).ColorTexture.Target;
+	FRDGTextureRef OriginalParticleTexture = ParticleTexture.Target;
 	FRDGTextureDesc VitalParticleTextureDesc = OriginalParticleTexture->Desc;
 	VitalParticleTextureDesc.Reset();
 	VitalParticleTextureDesc.Flags |= TexCreate_UAV;
-	//VitalParticleTextureDesc.Flags &= ~(TexCreate_RenderTargetable | TexCreate_FastVRAM);
 	
 	FRDGTextureRef VitalParticleTexture = GraphBuilder.CreateTexture(VitalParticleTextureDesc, TEXT("Particle Output Texture"));
 	
 	FRectShaderPSParams* PSParams = GraphBuilder.AllocParameters<FRectShaderPSParams>();
 	// Render target binding slots
 	FRenderTargetBindingSlots RenderTargets;
-	RenderTargets[0] = FRenderTargetBinding(SceneColor.Texture, ERenderTargetLoadAction::ENoAction);
-	RenderTargets[1] = FRenderTargetBinding(VitalParticleTexture, ERenderTargetLoadAction::ENoAction);
+	RenderTargets[0] = FRenderTargetBinding(VitalParticleTexture, ERenderTargetLoadAction::ENoAction);
 
+	float ParticleAlpha = 1.0f;
 	PSParams->RenderTargets = RenderTargets;
+	PSParams->ParticleAlpha = ParticleAlpha;
 	PSParams->Color = MyColor;
 	PSParams->ParticleTexture = ParticleTexture.Target;
 	PSParams->InputSampler = TStaticSamplerState<SF_Point, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI();
@@ -69,8 +68,6 @@ void FRectViewExtension::RenderRectangle(
 	
 	TShaderMapRef<FRectShaderPS> PixelShader(ViewShaderMap);
 
-	// It is work!
-	// AddCopyTexturePass(GraphBuilder, ParticleTexture.Target, SceneColor.Texture);
 
 	AddFullscreenPass<FRectShaderPS>(
 		GraphBuilder,
@@ -79,12 +76,10 @@ void FRectViewExtension::RenderRectangle(
 		PixelShader,
 		PSParams,
 		ViewInfo);
-	
-	// input original particles, output SceneColor - OK
-	// input my particles, output SceneColor - OK
-	// input my particles, output original particles ?????
-	AddCopyTexturePass(GraphBuilder, VitalParticleTexture,
-		Inputs.TranslucencyViewResourcesMap.Get(ETranslucencyPass::TPT_TranslucencyAfterDOF).ColorTexture.Target);
+
+	// Change Original PartiecleColor.
+	// Translucency pass전체를 수정하는것이기 때문에 어떤 문제가 있을지모름. AR FADEOUT 상황에서는 괜찮을듯....
+	AddCopyTexturePass(GraphBuilder, VitalParticleTexture,OriginalParticleTexture);
 }
 
 void FRectViewExtension::SubscribeToPostProcessingPass(EPostProcessingPass PassId,
