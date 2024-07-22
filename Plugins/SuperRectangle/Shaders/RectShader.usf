@@ -42,12 +42,13 @@ void RectPSMain(
 
 	//ParticleTexture = ParticleTexture;
 	// if (Color.b > 0){
+	float ParitlceMult = 1.0;
 	float2 UV = PosToUV(InPosition.xy);
 	float4 samp = Texture2DSample(ParticleTexture, InputSampler, UV);
 	//samp *= 0;
 	//OutColor = InColor;//float4(samp.r * 100.0, 0.0, 0.0, 1.0);
 	OutColor = OutColor;
-	OutParticleColor = float4(samp.r * 100.0, samp.r * 100.0, 0.0, 1.0);
+	OutParticleColor = float4(samp.r * ParitlceMult, samp.g * ParitlceMult, samp.b * ParitlceMult, 1.0);
 	// }
 	// else{
 	// 	OutColor = InColor*1.5;

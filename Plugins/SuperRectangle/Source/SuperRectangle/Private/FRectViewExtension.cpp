@@ -60,8 +60,6 @@ void FRectViewExtension::RenderRectangle(
 	FRenderTargetBindingSlots RenderTargets;
 	RenderTargets[0] = FRenderTargetBinding(SceneColor.Texture, ERenderTargetLoadAction::ENoAction);
 	RenderTargets[1] = FRenderTargetBinding(VitalParticleTexture, ERenderTargetLoadAction::ENoAction);
-	// PSParams->RenderTargets[0] = FRenderTargetBinding(SceneColor.Texture, ERenderTargetLoadAction::ENoAction);
-	// PSParams->RenderTargets[1] = FRenderTargetBinding(VitalParticleTexture, ERenderTargetLoadAction::ENoAction);
 
 	PSParams->RenderTargets = RenderTargets;
 	PSParams->Color = MyColor;
