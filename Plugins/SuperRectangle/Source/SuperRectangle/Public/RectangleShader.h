@@ -22,6 +22,7 @@ public:
 // pixel shader class
 BEGIN_SHADER_PARAMETER_STRUCT(FRectShaderPSParams, )
 	SHADER_PARAMETER(FLinearColor, Color)
+	// input translucency.AfterDOF. 
 	SHADER_PARAMETER_RDG_TEXTURE(Texture2D, ParticleTexture)
 	SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, ViewParams)
 	SHADER_PARAMETER_SAMPLER(SamplerState, InputSampler)

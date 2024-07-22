@@ -11,31 +11,6 @@ DECLARE_GPU_DRAWCALL_STAT(SuperRectanglePass);
 
 FRectViewExtension::FRectViewExtension(const FAutoRegister& AutoRegister) : FSceneViewExtensionBase(AutoRegister){}
 
-void FRectViewExtension::PostRenderBasePassDeferred_RenderThread(
-	FRDGBuilder& GraphBuilder,
-	FSceneView& View,
-	const FRenderTargetBindingSlots& RenderTargets,
-	TRDGUniformBufferRef<FSceneTextureUniformParameters> SceneTextures)
-{
-	/*FLinearColor MyColor = FLinearColor(0.0f, 1.0f, 0.0f); // green
-	const FIntRect Viewport = static_cast<const FViewInfo&>(View).ViewRect;
-	const FGlobalShaderMap* ViewShaderMap = static_cast<const FViewInfo&>(View).ShaderMap;
-
-	// SceneTextures에서 SceneColor 텍스처를 가져옴
-	auto SceneTextureParams = SceneTextures->GetContents();
-	FRDGTextureRef SceneColorTexture = SceneTextureParams->SceneDepthTexture;
-	
-	// FScreenPassTexture로 변환
-	FScreenPassTexture SceneColor;
-	SceneColor.Texture = SceneColorTexture;
-	SceneColor.ViewRect = Viewport;
-
-	RDG_EVENT_SCOPE(GraphBuilder, "__PostRenderBasePassDeferred_RenderThread__");
-
-
-	RenderRectangle(GraphBuilder, ViewShaderMap, Viewport, SceneColor, MyColor);*/
-}
-
 void FRectViewExtension::PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View,
                                                          const FPostProcessingInputs& Inputs)
 {
@@ -51,7 +26,52 @@ void FRectViewExtension::PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuild
 	const FRDGTextureMSAA ParticleTextureMASS = TranslucencyAfterDofTexture.ColorTexture;
 	
 	FLinearColor MyColor = FLinearColor(1.0f, 0.0f, 1.0f);
-	RenderRectangle(GraphBuilder, ViewShaderMap, Viewport, SceneColor, MyColor, ParticleTextureMASS);
+	RenderRectangle(GraphBuilder, ViewShaderMap, Inputs, Viewport, SceneColor, MyColor, ParticleTextureMASS);
+}
+
+
+
+// RenderRectangle PARAMETER setup
+void FRectViewExtension::RenderRectangle(
+	FRDGBuilder& GraphBuilder,
+	const FGlobalShaderMap* ViewShaderMap,
+	const FPostProcessingInputs& Inputs,
+	const FIntRect& ViewInfo,
+	const FScreenPassTexture& SceneColor,
+	const FLinearColor MyColor,
+	const FRDGTextureMSAA ParticleTexture
+	)
+{
+	// Viewport parameters
+	const FScreenPassTextureViewport SceneColorTextureViewport(SceneColor);
+	const FScreenPassTextureViewportParameters SceneTextureViewportParams = GetTextureViewportParameters(SceneColorTextureViewport);
+
+	
+	FRectShaderPSParams* PSParams = GraphBuilder.AllocParameters<FRectShaderPSParams>();
+	PSParams->RenderTargets[0] = FRenderTargetBinding(SceneColor.Texture, ERenderTargetLoadAction::ENoAction);
+	PSParams->Color = MyColor;
+	PSParams->ParticleTexture = ParticleTexture.Target;
+	PSParams->InputSampler = TStaticSamplerState<SF_Point, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI();
+	PSParams->ViewParams = SceneTextureViewportParams;
+	
+	TShaderMapRef<FRectShaderPS> PixelShader(ViewShaderMap);
+
+	// It is work!
+	// AddCopyTexturePass(GraphBuilder, ParticleTexture.Target, SceneColor.Texture);
+
+	AddFullscreenPass<FRectShaderPS>(
+		GraphBuilder,
+		ViewShaderMap,
+		RDG_EVENT_NAME("Trancelucence Pass"),
+		PixelShader,
+		PSParams,
+		ViewInfo);
+	
+	// input original particles, output SceneColor - OK
+	// input my particles, output SceneColor - OK
+	// input my particles, output original particles ?????
+	AddCopyTexturePass(GraphBuilder, SceneColor.Texture,
+		Inputs.TranslucencyViewResourcesMap.Get(ETranslucencyPass::TPT_TranslucencyAfterDOF).ColorTexture.Target);
 }
 
 void FRectViewExtension::SubscribeToPostProcessingPass(EPostProcessingPass PassId,
@@ -77,12 +97,12 @@ FScreenPassTexture FRectViewExtension::SuperRectanglePassAfterTonemap_RenderThre
 {
 	const FScreenPassTexture SceneColor = Inputs.GetInput(EPostProcessMaterialInput::SeparateTranslucency);
 
-	RDG_GPU_STAT_SCOPE(GraphBuilder, SuperRectanglePass);
+	/*RDG_GPU_STAT_SCOPE(GraphBuilder, SuperRectanglePass);
 	RDG_EVENT_SCOPE(GraphBuilder, "__AfterTonemap__SuperRectangle");
 
 	const FIntRect ViewInfo = static_cast<const FViewInfo&>(View).ViewRect;
 	const FGlobalShaderMap* ViewShaderMap = static_cast<const FViewInfo&>(View).ShaderMap;
-	FLinearColor MyColor = FLinearColor(1.0f, 0.0f, 0.0f);
+	FLinearColor MyColor = FLinearColor(1.0f, 0.0f, 0.0f);*/
 
 	// RenderRectangle(GraphBuilder, ViewShaderMap, ViewInfo, SceneColor, MyColor);
 
@@ -96,12 +116,12 @@ FScreenPassTexture FRectViewExtension::SuperRectanglePassAfterMotionBlur_RenderT
 {
 	const FScreenPassTexture SceneColor = Inputs.GetInput(EPostProcessMaterialInput::SeparateTranslucency);
 
-	RDG_GPU_STAT_SCOPE(GraphBuilder, SuperRectanglePass);
+	/*RDG_GPU_STAT_SCOPE(GraphBuilder, SuperRectanglePass);
 	RDG_EVENT_SCOPE(GraphBuilder, "__AfterMotionBlur__SuperRectangle");
 
 	const FIntRect ViewInfo = static_cast<const FViewInfo&>(View).ViewRect;
 	const FGlobalShaderMap* ViewShaderMap = static_cast<const FViewInfo&>(View).ShaderMap;
-	FLinearColor MyColor = FLinearColor(1.0f, 1.0f, 0.0f);
+	FLinearColor MyColor = FLinearColor(1.0f, 1.0f, 0.0f);*/
 
 	// RenderRectangle(GraphBuilder, ViewShaderMap, ViewInfo, SceneColor, MyColor,);
 
@@ -124,37 +144,6 @@ FScreenPassTexture FRectViewExtension::ReturnUntouchedSceneColorForPostProcessin
 	}
 }
 
-void FRectViewExtension::RenderRectangle(
-	FRDGBuilder& GraphBuilder,
-	const FGlobalShaderMap* ViewShaderMap,
-	const FIntRect& ViewInfo,
-	const FScreenPassTexture& SceneColor,
-	const FLinearColor MyColor,
-	const FRDGTextureMSAA ParticleTexture
-	)
-{
-	// Viewport parameters
-	const FScreenPassTextureViewport SceneColorTextureViewport(SceneColor);
-	const FScreenPassTextureViewportParameters SceneTextureViewportParams = GetTextureViewportParameters(SceneColorTextureViewport);
-
-	
-	FRectShaderPSParams* PSParams = GraphBuilder.AllocParameters<FRectShaderPSParams>();
-	PSParams->RenderTargets[0] = FRenderTargetBinding(SceneColor.Texture, ERenderTargetLoadAction::ENoAction);
-	PSParams->Color = MyColor;
-	PSParams->ParticleTexture = ParticleTexture.Target;
-	PSParams->InputSampler = TStaticSamplerState<SF_Point, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI();
-	PSParams->ViewParams = SceneTextureViewportParams;
-	
-	TShaderMapRef<FRectShaderPS> PixelShader(ViewShaderMap);
-
-	AddFullscreenPass<FRectShaderPS>(
-		GraphBuilder,
-		ViewShaderMap,
-		RDG_EVENT_NAME("SuperRectanglePass"),
-		PixelShader,
-		PSParams,
-		ViewInfo);
-}
 
 FScreenPassTextureViewportParameters FRectViewExtension::GetTextureViewportParameters(
 	const FScreenPassTextureViewport& InViewport)
@@ -273,7 +262,30 @@ void FRectViewExtension::DrawFullscreenRectangle(FRHICommandList& RHICmdList, ui
 		InstanceCount);
 }
 
+void FRectViewExtension::PostRenderBasePassDeferred_RenderThread(
+	FRDGBuilder& GraphBuilder,
+	FSceneView& View,
+	const FRenderTargetBindingSlots& RenderTargets,
+	TRDGUniformBufferRef<FSceneTextureUniformParameters> SceneTextures)
+{
+	/*FLinearColor MyColor = FLinearColor(0.0f, 1.0f, 0.0f); // green
+	const FIntRect Viewport = static_cast<const FViewInfo&>(View).ViewRect;
+	const FGlobalShaderMap* ViewShaderMap = static_cast<const FViewInfo&>(View).ShaderMap;
 
+	// SceneTextures에서 SceneColor 텍스처를 가져옴
+	auto SceneTextureParams = SceneTextures->GetContents();
+	FRDGTextureRef SceneColorTexture = SceneTextureParams->SceneDepthTexture;
+	
+	// FScreenPassTexture로 변환
+	FScreenPassTexture SceneColor;
+	SceneColor.Texture = SceneColorTexture;
+	SceneColor.ViewRect = Viewport;
+
+	RDG_EVENT_SCOPE(GraphBuilder, "__PostRenderBasePassDeferred_RenderThread__");
+
+
+	RenderRectangle(GraphBuilder, ViewShaderMap, Viewport, SceneColor, MyColor);*/
+}
 
 
 

@@ -10,18 +10,24 @@ SamplerState InputSampler;
 
 float2 PosToUV(float2 Pos)
 {
-	float2 ViewportUV = ((Pos - ViewParams_ViewportMin.xy) * ViewParams_ViewportSizeInverse.xy);
-	return (ViewportUV * ViewParams_UVViewportSize + ViewParams_UVViewportMin);
+	// float2 ViewportUV = ((Pos - ViewParams_ViewportMin.xy) * ViewParams_ViewportSizeInverse.xy);
+	// return (ViewportUV * ViewParams_UVViewportSize + ViewParams_UVViewportMin);
+
+	// Viewport 기준으로 UV를 계산합니다.
+	float2 ViewportUV = (Pos - ViewParams_ViewportMin) * ViewParams_ViewportSizeInverse;
+	return ViewportUV * ViewParams_UVViewportSize + ViewParams_UVViewportMin;
 }
 
 void RectVSMain(
-	in float2 InPostion : ATTRIBUTE0,
+	in float2 InPosition : ATTRIBUTE0,
 	in float4 InColor : ATTRIBUTE1,
-	out float4 OutPostion : SV_POSITION,
+	out float4 OutPosition : SV_POSITION,
 	out float4 OutColor : COLOR0
 )
 {
-	OutPostion = float4(InPostion*0.5, 0, 1);
+	// OutPostion = float4(InPostion*0.5, 0, 1);
+	// InPosition을 NDC 좌표로 변환합니다. ([-1, 1] 범위로 변환)
+	OutPosition = float4(InPosition * 2.0 - 1.0, 0, 1);
 	OutColor = InColor;
 }
 
@@ -29,7 +35,8 @@ void RectVSMain(
 void RectPSMain(
 	in float4 InPosition : SV_POSITION,
 	in float4 InColor : COLOR0,
-	out float4 OutColor : SV_TARGET0)
+	out float4 OutColor : SV_TARGET0
+	)
 {
 
 	//ParticleTexture = ParticleTexture;
@@ -37,8 +44,8 @@ void RectPSMain(
 	float2 UV = PosToUV(InPosition.xy);
 	float4 samp = Texture2DSample(ParticleTexture, InputSampler, UV);
 	//samp *= 0;
-	OutColor = float4(samp.r * 100.0, 0.0, 0.0, 1.0);
-	
+	//OutColor = InColor;//float4(samp.r * 100.0, 0.0, 0.0, 1.0);
+	OutColor = OutColor;
 	// }
 	// else{
 	// 	OutColor = InColor*1.5;
