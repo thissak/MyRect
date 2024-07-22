@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "ScreenPass.h"
 #include "ShaderParameterStruct.h"
 
 // vertex shader class
@@ -21,6 +22,9 @@ public:
 // pixel shader class
 BEGIN_SHADER_PARAMETER_STRUCT(FRectShaderPSParams, )
 	SHADER_PARAMETER(FLinearColor, Color)
+	SHADER_PARAMETER_RDG_TEXTURE(Texture2D, ParticleTexture)
+	SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, ViewParams)
+	SHADER_PARAMETER_SAMPLER(SamplerState, InputSampler)
 	RENDER_TARGET_BINDING_SLOTS()
 END_SHADER_PARAMETER_STRUCT()
 class FRectShaderPS : public FGlobalShader

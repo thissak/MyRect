@@ -47,8 +47,11 @@ void FRectViewExtension::PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuild
 	RDG_EVENT_SCOPE(GraphBuilder, "__PrePostProcessPass__SuperRectangleBlue");
 	const FGlobalShaderMap* ViewShaderMap = static_cast<const FViewInfo&>(View).ShaderMap;
 	
-	FLinearColor MyColor = FLinearColor(0.0f, 0.0f, 1.0f);
-	RenderRectangle(GraphBuilder, ViewShaderMap, Viewport, SceneColor, MyColor);
+	auto TranslucencyAfterDofTexture = Inputs.TranslucencyViewResourcesMap.Get(ETranslucencyPass::TPT_TranslucencyAfterDOF);
+	const FRDGTextureMSAA ParticleTextureMASS = TranslucencyAfterDofTexture.ColorTexture;
+	
+	FLinearColor MyColor = FLinearColor(1.0f, 0.0f, 1.0f);
+	RenderRectangle(GraphBuilder, ViewShaderMap, Viewport, SceneColor, MyColor, ParticleTextureMASS);
 }
 
 void FRectViewExtension::SubscribeToPostProcessingPass(EPostProcessingPass PassId,
@@ -81,7 +84,7 @@ FScreenPassTexture FRectViewExtension::SuperRectanglePassAfterTonemap_RenderThre
 	const FGlobalShaderMap* ViewShaderMap = static_cast<const FViewInfo&>(View).ShaderMap;
 	FLinearColor MyColor = FLinearColor(1.0f, 0.0f, 0.0f);
 
-	RenderRectangle(GraphBuilder, ViewShaderMap, ViewInfo, SceneColor, MyColor);
+	// RenderRectangle(GraphBuilder, ViewShaderMap, ViewInfo, SceneColor, MyColor);
 
 	return SceneColor;
 }
@@ -98,9 +101,9 @@ FScreenPassTexture FRectViewExtension::SuperRectanglePassAfterMotionBlur_RenderT
 
 	const FIntRect ViewInfo = static_cast<const FViewInfo&>(View).ViewRect;
 	const FGlobalShaderMap* ViewShaderMap = static_cast<const FViewInfo&>(View).ShaderMap;
-	FLinearColor MyColor = FLinearColor(1.0f, 0.0f, 0.0f);
+	FLinearColor MyColor = FLinearColor(1.0f, 1.0f, 0.0f);
 
-	RenderRectangle(GraphBuilder, ViewShaderMap, ViewInfo, SceneColor, MyColor);
+	// RenderRectangle(GraphBuilder, ViewShaderMap, ViewInfo, SceneColor, MyColor,);
 
 	return SceneColor;
 
@@ -126,13 +129,22 @@ void FRectViewExtension::RenderRectangle(
 	const FGlobalShaderMap* ViewShaderMap,
 	const FIntRect& ViewInfo,
 	const FScreenPassTexture& SceneColor,
-	const FLinearColor MyColor
+	const FLinearColor MyColor,
+	const FRDGTextureMSAA ParticleTexture
 	)
 {
+	// Viewport parameters
+	const FScreenPassTextureViewport SceneColorTextureViewport(SceneColor);
+	const FScreenPassTextureViewportParameters SceneTextureViewportParams = GetTextureViewportParameters(SceneColorTextureViewport);
+
+	
 	FRectShaderPSParams* PSParams = GraphBuilder.AllocParameters<FRectShaderPSParams>();
 	PSParams->RenderTargets[0] = FRenderTargetBinding(SceneColor.Texture, ERenderTargetLoadAction::ENoAction);
 	PSParams->Color = MyColor;
-
+	PSParams->ParticleTexture = ParticleTexture.Target;
+	PSParams->InputSampler = TStaticSamplerState<SF_Point, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI();
+	PSParams->ViewParams = SceneTextureViewportParams;
+	
 	TShaderMapRef<FRectShaderPS> PixelShader(ViewShaderMap);
 
 	AddFullscreenPass<FRectShaderPS>(
@@ -144,7 +156,41 @@ void FRectViewExtension::RenderRectangle(
 		ViewInfo);
 }
 
+FScreenPassTextureViewportParameters FRectViewExtension::GetTextureViewportParameters(
+	const FScreenPassTextureViewport& InViewport)
+{
+	const FVector2f Extent(InViewport.Extent);
+	const FVector2f ViewportMin(InViewport.Rect.Min.X, InViewport.Rect.Min.Y);
+	const FVector2f ViewportMax(InViewport.Rect.Max.X, InViewport.Rect.Max.Y);
+	const FVector2f ViewportSize = ViewportMax - ViewportMin;
 
+	FScreenPassTextureViewportParameters Parameters;
+
+	if (!InViewport.IsEmpty()) {
+		Parameters.Extent = FVector2f(Extent);
+		Parameters.ExtentInverse = FVector2f(1.0f / Extent.X, 1.0f / Extent.Y);
+
+		Parameters.ScreenPosToViewportScale = FVector2f(0.5f, -0.5f) * ViewportSize;	
+		Parameters.ScreenPosToViewportBias = (0.5f * ViewportSize) + ViewportMin;	
+
+		Parameters.ViewportMin = InViewport.Rect.Min;
+		Parameters.ViewportMax = InViewport.Rect.Max;
+
+		Parameters.ViewportSize = ViewportSize;
+		Parameters.ViewportSizeInverse = FVector2f(1.0f / Parameters.ViewportSize.X, 1.0f / Parameters.ViewportSize.Y);
+
+		Parameters.UVViewportMin = ViewportMin * Parameters.ExtentInverse;
+		Parameters.UVViewportMax = ViewportMax * Parameters.ExtentInverse;
+
+		Parameters.UVViewportSize = Parameters.UVViewportMax - Parameters.UVViewportMin;
+		Parameters.UVViewportSizeInverse = FVector2f(1.0f / Parameters.UVViewportSize.X, 1.0f / Parameters.UVViewportSize.Y);
+
+		Parameters.UVViewportBilinearMin = Parameters.UVViewportMin + 0.5f * Parameters.ExtentInverse;
+		Parameters.UVViewportBilinearMax = Parameters.UVViewportMax - 0.5f * Parameters.ExtentInverse;
+	}
+
+	return Parameters;
+}
 
 template <typename TShaderClass>
 void FRectViewExtension::AddFullscreenPass(

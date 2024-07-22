@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "CommonRenderResources.h"
 #include "RectangleShader.h"
+#include "RenderGraphUtils.h"
 #include "SceneViewExtension.h"
 
 class SUPERRECTANGLE_API FRectViewExtension : public FSceneViewExtensionBase
@@ -56,6 +57,8 @@ protected:
 		uint32 StencilRef = 0);
 
 	static void DrawFullscreenRectangle(FRHICommandList& RHICmdList, uint32 InstanceCount);
+
+	static FScreenPassTextureViewportParameters GetTextureViewportParameters(const FScreenPassTextureViewport& InViewport);
 	
 	FScreenPassTexture SuperRectanglePassAfterTonemap_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View,
 		const FPostProcessMaterialInputs& Inputs);	
@@ -69,7 +72,8 @@ public:
 	const FGlobalShaderMap* ViewShaderMap,
 	const FIntRect& View,
 	const FScreenPassTexture& SceneColor,
-	const FLinearColor MyColor
+	const FLinearColor MyColor,
+	const FRDGTextureMSAA ParticleTexture
 	);
 
 private:

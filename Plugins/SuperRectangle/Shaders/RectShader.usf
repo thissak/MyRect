@@ -2,7 +2,17 @@
 #include "/Engine/Private/Common.ush"
 #include "/Engine/Private/ScreenPass.ush"
 
+SCREEN_PASS_TEXTURE_VIEWPORT(ViewParams)
+
 float4 Color;
+Texture2D ParticleTexture;
+SamplerState InputSampler;
+
+float2 PosToUV(float2 Pos)
+{
+	float2 ViewportUV = ((Pos - ViewParams_ViewportMin.xy) * ViewParams_ViewportSizeInverse.xy);
+	return (ViewportUV * ViewParams_UVViewportSize + ViewParams_UVViewportMin);
+}
 
 void RectVSMain(
 	in float2 InPostion : ATTRIBUTE0,
@@ -21,10 +31,16 @@ void RectPSMain(
 	in float4 InColor : COLOR0,
 	out float4 OutColor : SV_TARGET0)
 {
-	if (Color.b > 0){
-		OutColor = Color;
-	}
-	else{
-		OutColor = InColor*1.5;
-	}
+
+	//ParticleTexture = ParticleTexture;
+	// if (Color.b > 0){
+	float2 UV = PosToUV(InPosition.xy);
+	float4 samp = Texture2DSample(ParticleTexture, InputSampler, UV);
+	//samp *= 0;
+	OutColor = float4(samp.r * 100.0, 0.0, 0.0, 1.0);
+	
+	// }
+	// else{
+	// 	OutColor = InColor*1.5;
+	// }
 }
