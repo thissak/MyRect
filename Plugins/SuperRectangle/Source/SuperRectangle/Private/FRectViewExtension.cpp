@@ -46,9 +46,24 @@ void FRectViewExtension::RenderRectangle(
 	const FScreenPassTextureViewport SceneColorTextureViewport(SceneColor);
 	const FScreenPassTextureViewportParameters SceneTextureViewportParams = GetTextureViewportParameters(SceneColorTextureViewport);
 
+	// thissa
+	FRDGTextureRef OriginalParticleTexture = Inputs.TranslucencyViewResourcesMap.Get(ETranslucencyPass::TPT_TranslucencyAfterDOF).ColorTexture.Target;
+	FRDGTextureDesc VitalParticleTextureDesc = OriginalParticleTexture->Desc;
+	VitalParticleTextureDesc.Reset();
+	VitalParticleTextureDesc.Flags |= TexCreate_UAV;
+	//VitalParticleTextureDesc.Flags &= ~(TexCreate_RenderTargetable | TexCreate_FastVRAM);
+	
+	FRDGTextureRef VitalParticleTexture = GraphBuilder.CreateTexture(VitalParticleTextureDesc, TEXT("Particle Output Texture"));
 	
 	FRectShaderPSParams* PSParams = GraphBuilder.AllocParameters<FRectShaderPSParams>();
-	PSParams->RenderTargets[0] = FRenderTargetBinding(SceneColor.Texture, ERenderTargetLoadAction::ENoAction);
+	// Render target binding slots
+	FRenderTargetBindingSlots RenderTargets;
+	RenderTargets[0] = FRenderTargetBinding(SceneColor.Texture, ERenderTargetLoadAction::ENoAction);
+	RenderTargets[1] = FRenderTargetBinding(VitalParticleTexture, ERenderTargetLoadAction::ENoAction);
+	// PSParams->RenderTargets[0] = FRenderTargetBinding(SceneColor.Texture, ERenderTargetLoadAction::ENoAction);
+	// PSParams->RenderTargets[1] = FRenderTargetBinding(VitalParticleTexture, ERenderTargetLoadAction::ENoAction);
+
+	PSParams->RenderTargets = RenderTargets;
 	PSParams->Color = MyColor;
 	PSParams->ParticleTexture = ParticleTexture.Target;
 	PSParams->InputSampler = TStaticSamplerState<SF_Point, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI();
@@ -70,7 +85,7 @@ void FRectViewExtension::RenderRectangle(
 	// input original particles, output SceneColor - OK
 	// input my particles, output SceneColor - OK
 	// input my particles, output original particles ?????
-	AddCopyTexturePass(GraphBuilder, SceneColor.Texture,
+	AddCopyTexturePass(GraphBuilder, VitalParticleTexture,
 		Inputs.TranslucencyViewResourcesMap.Get(ETranslucencyPass::TPT_TranslucencyAfterDOF).ColorTexture.Target);
 }
 

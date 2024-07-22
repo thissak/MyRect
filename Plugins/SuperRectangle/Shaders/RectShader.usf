@@ -35,7 +35,8 @@ void RectVSMain(
 void RectPSMain(
 	in float4 InPosition : SV_POSITION,
 	in float4 InColor : COLOR0,
-	out float4 OutColor : SV_TARGET0
+	out float4 OutColor : SV_TARGET0,
+	out float4 OutParticleColor : SV_TARGET1
 	)
 {
 
@@ -46,6 +47,7 @@ void RectPSMain(
 	//samp *= 0;
 	//OutColor = InColor;//float4(samp.r * 100.0, 0.0, 0.0, 1.0);
 	OutColor = OutColor;
+	OutParticleColor = float4(samp.r * 100.0, samp.r * 100.0, 0.0, 1.0);
 	// }
 	// else{
 	// 	OutColor = InColor*1.5;
