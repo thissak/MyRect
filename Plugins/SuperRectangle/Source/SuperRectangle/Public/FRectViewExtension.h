@@ -13,6 +13,7 @@ class SUPERRECTANGLE_API FRectViewExtension : public FSceneViewExtensionBase
 public:
 	FRectViewExtension(const FAutoRegister& AutoRegister);
 
+	void SetParticleAlpha(float NewAlpha);
 	virtual void SetupViewFamily(FSceneViewFamily& InViewFamily) override {};
 	virtual void SetupView(FSceneViewFamily& InViewFamily, FSceneView& InView) override {};
 	virtual void BeginRenderViewFamily(FSceneViewFamily& InViewFamily) override {};
@@ -67,7 +68,7 @@ protected:
 		const FPostProcessMaterialInputs& InOutInputs);
 
 public:
-	static void RenderRectangle(
+	void RenderRectangle(
 	FRDGBuilder& GraphBuilder,
 	const FGlobalShaderMap* ViewShaderMap,
 	const FIntRect& View,
@@ -77,6 +78,7 @@ public:
 	);
 
 private:
+	float ParticleAlpha;
 	EPixelFormat FinalColorPixelFormat;
 	EPixelFormat HDRPixelFormat;
 	float FinalColorGamma;

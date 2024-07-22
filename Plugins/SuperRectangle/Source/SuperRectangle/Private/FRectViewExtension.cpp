@@ -9,7 +9,12 @@
 
 DECLARE_GPU_DRAWCALL_STAT(SuperRectanglePass);
 
-FRectViewExtension::FRectViewExtension(const FAutoRegister& AutoRegister) : FSceneViewExtensionBase(AutoRegister){}
+FRectViewExtension::FRectViewExtension(const FAutoRegister& AutoRegister) : FSceneViewExtensionBase(AutoRegister), ParticleAlpha(1.0f){}
+
+void FRectViewExtension::SetParticleAlpha(float NewAlpha)
+{
+	ParticleAlpha = NewAlpha;
+}
 
 void FRectViewExtension::PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View,
                                                          const FPostProcessingInputs& Inputs)
@@ -58,7 +63,6 @@ void FRectViewExtension::RenderRectangle(
 	FRenderTargetBindingSlots RenderTargets;
 	RenderTargets[0] = FRenderTargetBinding(VitalParticleTexture, ERenderTargetLoadAction::ENoAction);
 
-	float ParticleAlpha = 1.0f;
 	PSParams->RenderTargets = RenderTargets;
 	PSParams->ParticleAlpha = ParticleAlpha;
 	PSParams->Color = MyColor;
@@ -294,38 +298,4 @@ void FRectViewExtension::PostRenderBasePassDeferred_RenderThread(
 
 	RenderRectangle(GraphBuilder, ViewShaderMap, Viewport, SceneColor, MyColor);*/
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

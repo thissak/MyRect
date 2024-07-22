@@ -18,6 +18,10 @@ class SUPERRECTANGLE_API URectViewExtensionSubsystem : public UEngineSubsystem
 public:
 	void virtual Initialize(FSubsystemCollectionBase& Collection) override;
 
+	/** Sets the particle alpha value */
+	UFUNCTION(BlueprintCallable, Category="Vitalent")
+	void SetParticleAlpha(float NewAlpha);
+
 protected:
 	TSharedPtr<FRectViewExtension, ESPMode::ThreadSafe> RectViewExtension;
 	

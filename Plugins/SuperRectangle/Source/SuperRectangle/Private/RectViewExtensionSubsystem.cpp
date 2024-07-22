@@ -10,3 +10,13 @@ void URectViewExtensionSubsystem::Initialize(FSubsystemCollectionBase& Collectio
 	UE_LOG(LogTemp, Warning, TEXT("FRectViewExtension Initialize"))
 	this->RectViewExtension = FSceneViewExtensions::NewExtension<FRectViewExtension>();
 }
+
+void URectViewExtensionSubsystem::SetParticleAlpha(float NewAlpha)
+{
+	if (RectViewExtension.IsValid())
+	{
+		RectViewExtension->SetParticleAlpha(NewAlpha);
+	}
+}
+
+
