@@ -54,9 +54,9 @@ public:
 		Vertices.SetNumUninitialized(4);
 
 		Vertices[0].Position = FVector2f(-1.0f, -1.0f); // left bottom
-		Vertices[1].Position = FVector2f(1.0f, -1.0f); //right bottom
-		Vertices[2].Position = FVector2f(-1.0f, 1.0f); // left top
-		Vertices[3].Position = FVector2f(1.0f, 1.0f); // right top
+		Vertices[1].Position = FVector2f(1.0f, -1.0f);  // right bottom
+		Vertices[2].Position = FVector2f(-1.0f, 1.0f);  // left top
+		Vertices[3].Position = FVector2f(1.0f, 1.0f);   // right top
 
 		Vertices[0].Color = FVector4f(1.0f, 0.0f, 0.0f, 1.0f);
 		Vertices[1].Color = FVector4f(0.0f, 1.0f, 0.0f, 1.0f);

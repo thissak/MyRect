@@ -26,9 +26,12 @@ void FRectViewExtension::PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuild
 	
 	RDG_EVENT_SCOPE(GraphBuilder, "__PrePostProcessPass__SuperRectangleBlue");
 	const FGlobalShaderMap* ViewShaderMap = static_cast<const FViewInfo&>(View).ShaderMap;
-	
+
+	// Velocity를 없에기.. PrePostProcessPass에서는 BlackDummy가 들어온다.
+	auto SceneColorVelocityTexture = Inputs.SceneTextures->GetParameters().GetContents()->GBufferVelocityTexture;
 	auto TranslucencyAfterDofTexture = Inputs.TranslucencyViewResourcesMap.Get(ETranslucencyPass::TPT_TranslucencyAfterDOF);
 	const FRDGTextureMSAA ParticleTextureMASS = TranslucencyAfterDofTexture.ColorTexture;
+	auto test = GetAsTexture(SceneColorVelocityTexture);
 	
 	FLinearColor MyColor = FLinearColor(1.0f, 0.0f, 1.0f);
 	RenderRectangle(GraphBuilder, ViewShaderMap, Viewport, SceneColor, MyColor, ParticleTextureMASS);
@@ -50,7 +53,7 @@ void FRectViewExtension::RenderRectangle(
 	const FScreenPassTextureViewport SceneColorTextureViewport(SceneColor);
 	const FScreenPassTextureViewportParameters SceneTextureViewportParams = GetTextureViewportParameters(SceneColorTextureViewport);
 
-	// thissa
+	// QArt
 	FRDGTextureRef OriginalParticleTexture = ParticleTexture.Target;
 	FRDGTextureDesc VitalParticleTextureDesc = OriginalParticleTexture->Desc;
 	VitalParticleTextureDesc.Reset();
