@@ -14,6 +14,14 @@ FRectViewExtension::FRectViewExtension(const FAutoRegister& AutoRegister) : FSce
 void FRectViewExtension::SetParticleAlpha(float NewAlpha)
 {
 	ParticleAlpha = NewAlpha;
+	if ( NewAlpha < 0.5f )
+	{
+		IConsoleManager::Get().FindConsoleVariable(TEXT("r.Translucency.Velocity"))->Set(0);
+	}
+	else
+	{
+		IConsoleManager::Get().FindConsoleVariable(TEXT("r.Translucency.Velocity"))->Set(1);
+	}
 }
 
 void FRectViewExtension::PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View,

@@ -40,8 +40,8 @@ void RectPSMain(
 	float2 UV = PosToUV(InPosition);
 	float4 OriginalParticleSample = Texture2DSample(ParticleTexture, InputSampler, UV);
 
-	OutParticleColor = float4(0.0, 0.0, 0.0, 1.0);
-	// OutParticleColor = float4(OriginalParticleSample.rgb * ParticleAlpha, 1.0);
+	// OutParticleColor = float4(OriginalParticleSample.r * 10, 0.0, 0.0, 1.0);
+	OutParticleColor = float4(OriginalParticleSample.rgb * ParticleAlpha, 1.0);
 
 
 }
