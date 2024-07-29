@@ -11,6 +11,7 @@ DECLARE_GPU_DRAWCALL_STAT(SuperRectanglePass);
 
 FRectViewExtension::FRectViewExtension(const FAutoRegister& AutoRegister) : FSceneViewExtensionBase(AutoRegister), ParticleAlpha(1.0f){}
 
+// CVar로 Velocity 수정
 void FRectViewExtension::SetParticleAlpha(float NewAlpha)
 {
 	ParticleAlpha = NewAlpha;
